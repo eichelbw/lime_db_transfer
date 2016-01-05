@@ -9,6 +9,13 @@ from SurveyStructure import *
 class MedEdNetToEDNATranslator:
 
     def __init__(self, structure_csv=None, response_csv=None, out=sys.stdout):
+        """Prepare translator if files are given, get the files if not
+
+        args:
+        structure_csv -- limesurvey_survey_(sid).txt for LS in question
+        response_csv -- vvexport_(sid).txt for LS response set
+        out -- testing utility
+        """
         if not structure_csv or not response_csv:
             self.prompt_user()
         else:
@@ -18,6 +25,10 @@ class MedEdNetToEDNATranslator:
         self.conduct_checks()
 
     def prompt_user(self):
+        """Prompts user for LS files if not present in at instantiation.
+
+        creates a new instance of the translator if correct files are specified
+        """
         ss_opts = [i for i in os.listdir(".") if i.startswith("limesurvey_survey")]
         r_opts = [i for i in os.listdir(".") if i.startswith("vvexport")]
         self.out.write("Survey Structure file? Here are some possibilities I found:")
@@ -29,13 +40,21 @@ class MedEdNetToEDNATranslator:
         if not ss or not resp:
             raise UserWarning("You gotta give me some files, bro")
         else:
-            MedEdNetToEDNATranslator(ss, resp)
+            MedEdNetToEDNATranslator(ss, resp, self.out)
 
     def read_response_csv(self, response_csv):
+        """Reads responses and returns them in a list."""
         with open(response_csv, 'rb') as inp:
             return list(csv.reader(inp, delimiter='\t'))
 
     def conduct_checks(self):
+        """Check for a few common quirks of the LS that can cause headaches later
+
+        1. remove empty fields in SS export
+        2. check for long question names
+        3. check that headers are equal length (1-1:title-variable)
+        4. make sure header/response matrix is evenly rectangular. pad if not
+        """
         # first, some preliminary checks
         headers = self.responses[:2]
         responses = self.responses[2:]
@@ -70,7 +89,17 @@ class MedEdNetToEDNATranslator:
                 response.append("")
 
     def massage_header(self, headers):
+        """Generate responseStatus_ columns
 
+        args:
+        headers -- first two elements of the responses list of lists
+
+        returns:
+        new_headers -- deepcopy of headers with responseStatus_ columns appended
+                       to variable header, blanks appended to text header
+        offset -- integer. number to offset coded responses so that the
+                  indexed_question_list is indexed the same as the responses
+        """
         header_ignore = ["id", "token", "submitdate", "lastpage",
         "startlanguage", "startdate", "datestamp", "ipaddr", ""]
 
@@ -88,7 +117,19 @@ class MedEdNetToEDNATranslator:
         return new_headers, offset
 
     def code_responses(self, responses, headers, offset):
+        """Populate contents of responseStatus_ columnds based on responses
 
+        args:
+        responses -- modified response rows minus the first two entries (the
+                     headers). at this point, these are roughly half empty,
+                     waiting to be coded
+        headers -- first two entries of the modified responses list of lists.
+        offset -- number of header columns ignored during extra column
+                  generation
+
+        returns:
+        outp -- fully populated responses array.
+        """
         iql = self.survey_structure.indexed_question_list
         bad_response_key = ["NA", "N/A", "NOT AVAILABLE", "NONE", "?"]
 
@@ -134,6 +175,7 @@ class MedEdNetToEDNATranslator:
         return outp
 
     def write_responses(self):
+        """Writes massaged & coded responses to tab delimited .txt"""
         p1, offset = self.massage_header(self.responses[:2])
         p2 = self.code_responses(self.responses[2:], p1, offset)
         target = "translated_EDNA_" + self.survey_structure.sid + ".txt"

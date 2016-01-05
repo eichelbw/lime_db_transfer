@@ -2,6 +2,16 @@ import sys
 from MedEdNetToEDNATranslator import *
 
 def main(argv, out=sys.stdout):
+    """Handles interaction on the command line, runs trans based on input.
+
+    args:
+    argv -- list of command line arguments/options.
+            expected:
+                --ss_txt/-s: limesurvey_survey_(sid).txt
+                --vvexport_txt/-v: vvexport_(sid).txt
+                --help/-h
+    out -- testing utility (default system stdout)
+    """
     ss_txt = ""
     vvexport_txt = ""
     try:
@@ -9,7 +19,7 @@ def main(argv, out=sys.stdout):
     except getopt.GetoptError:
         pass
     for opt, arg in opts:
-        if opt == "-h":
+        if opt in ("-h", "--help"):
             out.write("""usage: MedEdNetToEDNATranslator.py
             -s <survey_structure>
             -v <vvexport>""")
