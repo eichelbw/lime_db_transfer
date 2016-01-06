@@ -1,9 +1,7 @@
 import sys
 import unittest
-from StringIO import StringIO
 from MedEdNetToEDNATranslator import *
 from SurveyStructure import *
-import main
 
 class TestMedEdNetToEDNATranslator(unittest.TestCase):
 
@@ -149,15 +147,6 @@ class TestSS(unittest.TestCase):
         self.assertEqual(q.text, "a test y/n question", "text is wrong")
         self.assertListEqual(q.subquestions, [], "should have no subquestions")
         self.assertListEqual(q.answers, [], "should have no answers")
-
-class CommandLineTestCase(unittest.TestCase):
-    def test_with_empty_arguments(self):
-        """should start the input prompt routine"""
-        out = StringIO()
-        main.main([], out)
-        output = out.getvalue().strip()
-        self.assertNotEqual(output, "","{}".format(output))
-
 
 class TestAnswer(unittest.TestCase):
 

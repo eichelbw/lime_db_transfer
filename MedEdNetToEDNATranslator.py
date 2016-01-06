@@ -5,42 +5,28 @@ import csv
 from copy import deepcopy
 
 from SurveyStructure import *
+from main import *
 
 class MedEdNetToEDNATranslator:
 
-    def __init__(self, structure_csv=None, response_csv=None, out=sys.stdout):
+    def __init__(self, input_func, structure_csv=None, response_csv=None,
+            out=sys.stdout):
         """Prepare translator if files are given, get the files if not
 
         args:
         structure_csv -- limesurvey_survey_(sid).txt for LS in question
         response_csv -- vvexport_(sid).txt for LS response set
-        out -- testing utility
+        input_func -- streamlines input testing
+        out -- streamlines output testing
         """
+        self.out = out
         if not structure_csv or not response_csv:
-            self.prompt_user()
+            self.prompt_user(input_func)
         else:
             self.survey_structure = SurveyStructure(structure_csv)
             self.responses = self.read_response_csv(response_csv)
-        self.out = out
         self.conduct_checks()
-
-    def prompt_user(self):
-        """Prompts user for LS files if not present in at instantiation.
-
-        creates a new instance of the translator if correct files are specified
-        """
-        ss_opts = [i for i in os.listdir(".") if i.startswith("limesurvey_survey")]
-        r_opts = [i for i in os.listdir(".") if i.startswith("vvexport")]
-        self.out.write("Survey Structure file? Here are some possibilities I found:")
-        self.out.write("--> " + ", ".join(ss_opts))
-        ss = raw_input("? >")
-        self.out.write("Responses file? Here are some possibilities I found:")
-        self.out.write("--> " + ", ".join(r_opts))
-        resp = raw_input("? >")
-        if not ss or not resp:
-            raise UserWarning("You gotta give me some files, bro")
-        else:
-            MedEdNetToEDNATranslator(ss, resp, self.out)
+        self.write_responses()
 
     def read_response_csv(self, response_csv):
         """Reads responses and returns them in a list."""
@@ -48,7 +34,7 @@ class MedEdNetToEDNATranslator:
             return list(csv.reader(inp, delimiter='\t'))
 
     def conduct_checks(self):
-        """Check for a few common quirks of the LS that can cause headaches later
+        """Check for a few quirks of the LS that can cause headaches later
 
         1. remove empty fields in SS export
         2. check for long question names
@@ -87,6 +73,7 @@ class MedEdNetToEDNATranslator:
                 message many times.""".format(index, len(response),
                         len(headers[0])))
                 response.append("")
+        return True
 
     def massage_header(self, headers):
         """Generate responseStatus_ columns
@@ -179,6 +166,7 @@ class MedEdNetToEDNATranslator:
         p1, offset = self.massage_header(self.responses[:2])
         p2 = self.code_responses(self.responses[2:], p1, offset)
         target = "translated_EDNA_" + self.survey_structure.sid + ".txt"
+        self.out.write("You can find the translated file at {}".format(target))
         with open(target, "wb") as f:
             w = csv.writer(f, delimiter='\t')
             w.writerows(p1 + p2)
@@ -190,3 +178,6 @@ class MedEdNetToEDNATranslator:
         # question.name:response>code
         for index, entry in enumerate(p2[0][offset:117+offset]):
             self.out.write(p1[1][index+offset]+":"+entry+">"+p2[0][offset+index+117])
+
+if __name__ == "__main__":
+    main.main(sys.argv[1:])

@@ -7,6 +7,7 @@ class SurveyStructure:
         """Fully sets up the SurveyStructure object with iql"""
         self.structure_csv = structure_csv
         self.lol = self.read_structure_csv()
+        self.sid = self.lol[0][4]
         self.q_groups = self.generate_question_groups()
         self.check_question_completeness()
         self.indexed_question_list = self.generate_i_q_list()
@@ -240,3 +241,6 @@ class Answer:
         self.scale = scale
         self.name = name
         self.text = text
+
+if __name__ == "__main__":
+    ss = SurveyStructure("limesurvey_survey_471745.txt")
