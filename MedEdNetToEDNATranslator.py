@@ -20,11 +20,11 @@ class MedEdNetToEDNATranslator:
         out -- streamlines output testing
         """
         self.out = out
-        if not structure_csv or not response_csv:
-            self.prompt_user(input_func)
-        else:
-            self.survey_structure = SurveyStructure(structure_csv)
-            self.responses = self.read_response_csv(response_csv)
+        # if not structure_csv or not response_csv:
+        #     self.prompt_user(input_func)
+        # else:
+        self.survey_structure = SurveyStructure(structure_csv)
+        self.responses = self.read_response_csv(response_csv)
         self.conduct_checks()
         self.write_responses()
 
@@ -53,7 +53,7 @@ class MedEdNetToEDNATranslator:
             if len(h) > 22:
                 self.out.write("""The question name '{}' is too long (>22
                 characters) and may run into collision issues in LimeSurvey!
-                Please choose a shorter question name and have another go."""
+                Please choose a shorter question name and have another go.\n"""
                 .format(h))
                 raise KeyboardInterrupt
         # headers/responses should all be the same length
@@ -62,7 +62,7 @@ class MedEdNetToEDNATranslator:
         if len(headers[0]) != len(headers[1]):
             self.out.write("""Headers must be equal lengths. If this is not the
             case, something is likely fundementally wrong with the response
-            export.""")
+            export.\n""")
             raise ValueError
         for index, response in enumerate(responses):
             while len(response) < len(headers[0]):
@@ -70,7 +70,7 @@ class MedEdNetToEDNATranslator:
                 ({1} < {2}). The script will pad this response with placeholders
                 until length is correct, but you should likely look in to why
                 this could be happening-- especially if you're seeing this
-                message many times.""".format(index, len(response),
+                message many times.\n""".format(index, len(response),
                         len(headers[0])))
                 response.append("")
         return True
@@ -166,7 +166,7 @@ class MedEdNetToEDNATranslator:
         p1, offset = self.massage_header(self.responses[:2])
         p2 = self.code_responses(self.responses[2:], p1, offset)
         target = "translated_EDNA_" + self.survey_structure.sid + ".txt"
-        self.out.write("You can find the translated file at {}".format(target))
+        self.out.write("You can find the translated file at {}\n".format(target))
         with open(target, "wb") as f:
             w = csv.writer(f, delimiter='\t')
             w.writerows(p1 + p2)
@@ -180,4 +180,4 @@ class MedEdNetToEDNATranslator:
             self.out.write(p1[1][index+offset]+":"+entry+">"+p2[0][offset+index+117])
 
 if __name__ == "__main__":
-    main.main(sys.argv[1:])
+    main(sys.argv[1:])
