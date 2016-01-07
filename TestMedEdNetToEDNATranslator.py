@@ -6,7 +6,7 @@ from SurveyStructure import *
 class TestMedEdNetToEDNATranslator(unittest.TestCase):
 
     def setUp(self):
-        self.trans = MedEdNetToEDNATranslator('limesurvey_survey_471745.txt',
+        self.trans = MedEdNetToEDNATranslator(lambda: "", 'limesurvey_survey_471745.txt',
                 'vvexport_471745.txt')
 
     def tearDown(self):
